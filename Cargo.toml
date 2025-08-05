@@ -4,11 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ed25519-compact = { version = "2", default-features = false, features = [] }
 futures = { version = "0.3.31", default-features = false }
- 
+rustc-hash = { version = "2.1.1", default-features = false }
+serde = { version = "1", default-features = false, features = ["derive"] }
+
+hashbrown = { version = "0.15.4", default-features = false, optional = true }
+
 [features]
-# By default enable alloc only (no_std + alloc)
+# todo Change default to be "std", setting "alloc" for development purposes
 default = ["alloc"]
-alloc = ["futures/alloc"]
-# Enable full std library (implies alloc)
-std = ["alloc", "futures/std"]
+# default = ["std"]
+std = ["alloc", "futures/std", "rustc-hash/std", "serde/std"]
+alloc = ["futures/alloc", "hashbrown/alloc", "serde/alloc"]
