@@ -1,0 +1,14 @@
+[package]
+name = "theta-protocol"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+futures = { version = "0.3.31", default-features = false }
+ 
+[features]
+# By default enable alloc only (no_std + alloc)
+default = ["alloc"]
+alloc = ["futures/alloc"]
+# Enable full std library (implies alloc)
+std = ["alloc", "futures/std"]
