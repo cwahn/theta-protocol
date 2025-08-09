@@ -10,6 +10,7 @@ rustc-hash = { version = "2.1.1", default-features = false }
 serde = { version = "1", default-features = false, features = ["derive"] }
 
 hashbrown = { version = "0.15.4", default-features = false, optional = true }
+url = {version = "2.5.4", features = ["serde"]}
 
 [features]
 # todo Change default to be "std", setting "alloc" for development purposes
