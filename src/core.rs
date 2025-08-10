@@ -1,7 +1,6 @@
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, boxed::Box};
 use ed25519_compact::PublicKey;
-use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::error::Error;
@@ -42,6 +41,10 @@ pub trait Transport: Send + Sync + Sender + Receiver {
     fn open_uni(&self) -> BoxFuture<Result<Box<dyn Sender>, Error>>;
 
     fn accept_uni(&self) -> BoxFuture<Result<Box<dyn Receiver>, Error>>;
+
+    /// Export address of the given actor identifier.
+    /// Commonly used for re-exporting an actor
+    fn export_addr(&self, ident: &Ident) -> Url;
 }
 
 /// Logical sender
