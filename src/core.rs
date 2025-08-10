@@ -26,11 +26,11 @@ pub trait Network: Send + Sync {
     fn free(&self, local_addr: &Url) -> Result<(), Error>;
 
     /// Connect to a remote host address.
-    fn connect(&self, remote_addrs: &Url) -> BoxFuture<Result<Box<dyn Transport>, Error>>;
+    fn connect(&self, remote_addrs: &Url) -> BoxFuture<Result<Arc<dyn Transport>, Error>>;
 
     /// Accept a connection from a remote address.
     /// Should spawn tasks for each network that supports the scheme.
-    fn run(&self, on_accept: fn(PublicKey, Box<dyn Transport>));
+    fn run(&self, on_accept: fn(PublicKey, Arc<dyn Transport>));
 
     // ! Currently, there is no way to recover if the run method fails.
     // todo: Might need to find a way for graceful shutdown
