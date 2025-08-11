@@ -1,3 +1,4 @@
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, boxed::Box};
 use ed25519_compact::PublicKey;
