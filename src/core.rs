@@ -45,9 +45,7 @@ pub trait Transport: Debug + Send + Sync + Sender + Receiver {
 
     fn accept_uni(&self) -> BoxFuture<'_, Result<Box<dyn Receiver>, Error>>;
 
-    /// Export address of the given actor identifier.
-    /// Commonly used for re-exporting an actor
-    fn export_addr(&self, ident: &Ident) -> Url;
+    fn host_addr(&self) -> Url;
 }
 
 /// Logical sender

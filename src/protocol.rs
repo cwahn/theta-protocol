@@ -1,4 +1,4 @@
-use alloc::{boxed::Box, sync::Arc, vec::Vec};
+use alloc::{sync::Arc, vec::Vec};
 use ed25519_compact::PublicKey;
 use futures::{FutureExt, future::BoxFuture};
 use url::Url;
@@ -46,7 +46,7 @@ impl Network for Vec<Arc<dyn Network>> {
     fn connect(
         &self,
         remote_addrs: &Url,
-    ) -> BoxFuture<Result<Arc<dyn Transport>, crate::error::Error>> {
+    ) -> BoxFuture<'_, Result<Arc<dyn Transport>, crate::error::Error>> {
         for network in self {
             if network.is_supported_scheme(remote_addrs) {
                 return network.connect(remote_addrs);
