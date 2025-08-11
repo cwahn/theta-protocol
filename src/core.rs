@@ -29,7 +29,7 @@ pub trait Network: Debug + Send + Sync {
     fn free(&self, local_addr: &Url) -> Result<(), Error>;
 
     /// Connect to a remote host address.
-    fn connect(&self, remote_addrs: &Url) -> BoxFuture<'_, Result<Arc<dyn Transport>, Error>>;
+    fn connect(&self, remote_addrs: &Url) -> Result<Arc<dyn Transport>, Error>;
 
     /// Accept a connection from a remote address.
     /// Should spawn tasks for each network that supports the scheme.
@@ -40,6 +40,7 @@ pub trait Network: Debug + Send + Sync {
 }
 
 /// OSI layer 4 implementation
+/// Possibly not yet initialized
 pub trait Transport: Debug + Send + Sync + Sender + Receiver {
     fn open_uni(&self) -> BoxFuture<'_, Result<Box<dyn Sender>, Error>>;
 
