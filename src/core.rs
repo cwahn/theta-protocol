@@ -1,3 +1,5 @@
+use core::fmt::Debug;
+
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use alloc::{borrow::Cow, boxed::Box};
@@ -16,7 +18,7 @@ use futures::future::BoxFuture;
 pub type Ident = Cow<'static, [u8]>;
 
 /// Composable OSI layer 3 implementation
-pub trait Network: Send + Sync {
+pub trait Network: Debug + Send + Sync {
     /// Check if supported scheme
     fn is_supported_scheme(&self, addr: &Url) -> bool;
 
@@ -38,7 +40,7 @@ pub trait Network: Send + Sync {
 }
 
 /// OSI layer 4 implementation
-pub trait Transport: Send + Sync + Sender + Receiver {
+pub trait Transport: Debug + Send + Sync + Sender + Receiver {
     fn open_uni(&self) -> BoxFuture<'_, Result<Box<dyn Sender>, Error>>;
 
     fn accept_uni(&self) -> BoxFuture<'_, Result<Box<dyn Receiver>, Error>>;
