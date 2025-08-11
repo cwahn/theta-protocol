@@ -27,7 +27,7 @@ pub trait Network: Send + Sync {
     fn free(&self, local_addr: &Url) -> Result<(), Error>;
 
     /// Connect to a remote host address.
-    fn connect(&self, remote_addrs: &Url) -> BoxFuture<Result<Arc<dyn Transport>, Error>>;
+    fn connect(&self, remote_addrs: &Url) -> BoxFuture<'_, Result<Arc<dyn Transport>, Error>>;
 
     /// Accept a connection from a remote address.
     /// Should spawn tasks for each network that supports the scheme.
@@ -39,9 +39,9 @@ pub trait Network: Send + Sync {
 
 /// OSI layer 4 implementation
 pub trait Transport: Send + Sync + Sender + Receiver {
-    fn open_uni(&self) -> BoxFuture<Result<Box<dyn Sender>, Error>>;
+    fn open_uni(&self) -> BoxFuture<'_, Result<Box<dyn Sender>, Error>>;
 
-    fn accept_uni(&self) -> BoxFuture<Result<Box<dyn Receiver>, Error>>;
+    fn accept_uni(&self) -> BoxFuture<'_, Result<Box<dyn Receiver>, Error>>;
 
     /// Export address of the given actor identifier.
     /// Commonly used for re-exporting an actor
@@ -53,12 +53,12 @@ pub trait Transport: Send + Sync + Sender + Receiver {
 pub trait Sender: Send + Sync {
     /// - The transport guarantees integrity‐checked, at‐most‐once delivery.
     /// - The transport does not guarantee delivery or ordering
-    fn send_datagram(&self, payload: Vec<u8>) -> BoxFuture<Result<(), Error>>;
+    fn send_datagram(&self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>>;
 }
 
 /// Logical receiver
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message from single internal stream.
 pub trait Receiver: Send + Sync {
     /// Receive the next datagram from the peer.
-    fn recv_datagram(&self) -> BoxFuture<Result<Vec<u8>, Error>>;
+    fn recv_datagram(&self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
 }

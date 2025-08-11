@@ -9,12 +9,12 @@ use crate::core::{Network, Transport};
 
 pub struct RouteEntry {
     pub addr: Url,
-    pub mb_conn: Option<Box<dyn Transport>>,
+    pub mb_conn: Option<Arc<dyn Transport>>,
 }
 
 // Assume that no duplicated scheme support
 
-impl Network for Vec<Box<dyn Network>> {
+impl Network for Vec<Arc<dyn Network>> {
     fn is_supported_scheme(&self, addr: &Url) -> bool {
         self.iter().any(|n| n.is_supported_scheme(addr))
     }
