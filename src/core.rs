@@ -54,12 +54,12 @@ pub trait Transport: Debug + Send + Sync + Sender + Receiver {
 pub trait Sender: Send + Sync {
     /// - The transport guarantees integrity‐checked, at‐most‐once delivery.
     /// - The transport does not guarantee delivery or ordering
-    fn send_datagram(&self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>>;
+    fn send_frame(&self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>>;
 }
 
 /// Logical receiver
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message from single internal stream.
 pub trait Receiver: Send + Sync {
-    /// Receive the next datagram from the peer.
-    fn recv_datagram(&self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
+    /// Receive the next frame from the peer.
+    fn recv_frame(&self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
 }
