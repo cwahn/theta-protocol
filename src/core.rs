@@ -59,7 +59,7 @@ pub trait Transport: Debug + Clone + Send + Sync {
 /// Logical sender
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message with stream_id and send to single internal stream.
 pub trait Sender: Send + Sync {
-    type SendFrame<'a>: Future<Output = Result<(), Error>> + 'a
+    type SendFrame<'a>: Future<Output = Result<(), Error>> + Send + 'a
     where
         Self: 'a;
 
@@ -71,7 +71,7 @@ pub trait Sender: Send + Sync {
 /// Logical receiver
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message from single internal stream.
 pub trait Receiver: Send + Sync {
-    type RecvFrame<'a>: Future<Output = Result<Vec<u8>, Error>> + 'a
+    type RecvFrame<'a>: Future<Output = Result<Vec<u8>, Error>> + Send + 'a
     where
         Self: 'a;
 
