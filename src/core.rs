@@ -23,7 +23,7 @@ pub trait Network: Debug + Send + Sync {
     fn is_supported_scheme(&self, addr: &Url) -> bool;
 
     /// Connect to a remote host address.
-    fn connect(&self, remote_addrs: Url) -> BoxFuture<'_, Result<Arc<dyn Transport>, Error>>;
+    fn connect(&self, remote_addrs: Url) -> Result<Arc<dyn Transport>, Error>;
 
     /// Accept a connection from a remote address.
     /// Should spawn tasks for each network that supports the scheme.
