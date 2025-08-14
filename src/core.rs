@@ -35,7 +35,7 @@ pub trait Network: Debug + Send + Sync {
 
 /// OSI layer 4 implementation
 /// Possibly not yet initialized
-pub trait Transport: Debug + Send + Sync + Sender + Receiver {
+pub trait Transport: Debug + Send + Sync {
     fn send_datagram(&self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>>;
 
     fn recv_datagram(&self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
