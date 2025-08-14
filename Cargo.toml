@@ -3,6 +3,20 @@ name = "theta-protocol"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+# todo Change default to be "std", setting "alloc" for development purposes
+default = ["full"]
+
+full = ["std", "codec", "iroh"]
+
+std = ["alloc", "futures/std", "rustc-hash/std", "serde/std"]
+alloc = ["futures/alloc", "hashbrown/alloc", "serde/alloc"]
+
+# Implementation
+codec = ["std", "postcard", "tokio-util", "bytes", "tokio"]
+iroh = ["std"]
+
+
 [dependencies]
 ed25519-compact = { version = "2", default-features = false, features = [] }
 futures = { version = "0.3.31", default-features = false }
@@ -10,11 +24,13 @@ rustc-hash = { version = "2.1.1", default-features = false }
 serde = { version = "1", default-features = false, features = ["derive"] }
 
 hashbrown = { version = "0.15.4", default-features = false, optional = true }
-url = {version = "2.5.4", features = ["serde"]}
-
-[features]
-# todo Change default to be "std", setting "alloc" for development purposes
-default = ["alloc"]
-# default = ["std"]
-std = ["alloc", "futures/std", "rustc-hash/std", "serde/std"]
-alloc = ["futures/alloc", "hashbrown/alloc", "serde/alloc"]
+url = { version = "2.5.4", features = ["serde"] }
+postcard = { version = "1.1.3", features = ["use-std"], optional = true }
+tokio-util = { version = "0.7.16", features = ["codec"], optional = true }
+bytes = { version = "1.10.1", optional = true }
+tokio = { version = "1.47.1", features = [
+    "macros",
+    "rt",
+    "time",
+    "sync",
+], optional = true }

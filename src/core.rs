@@ -60,6 +60,6 @@ pub trait Sender: Send + Sync {
 /// Logical receiver
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message from single internal stream.
 pub trait Receiver: Send + Sync {
-    /// Receive the next frame from the peer.
+    /// Receive the next datagram from the peer.
     fn recv_frame(&self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
 }
