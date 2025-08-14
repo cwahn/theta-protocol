@@ -1,2 +1,2 @@
-// #[cfg(feature = "iroh")]
-// pub mod iroh;
+#[cfg(feature = "iroh")]
+pub mod iroh;

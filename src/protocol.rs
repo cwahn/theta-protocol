@@ -1,46 +1,125 @@
 use alloc::{sync::Arc, vec::Vec};
-use ed25519_compact::PublicKey;
 use futures::FutureExt;
 use url::Url;
 
-use crate::core::{Network, Transport};
-
-// pub type Routes = HashMap<PublicKey, Url>;
-
-pub struct RouteEntry {
-    pub addr: Url,
-    pub mb_conn: Option<Arc<dyn Transport>>,
-}
+use crate::{
+    core::{Network, Receiver, Sender, Transport},
+    error::Error,
+};
 
 // Assume that no duplicated scheme support
+impl Network
+    for Vec<
+        Arc<
+            dyn Network<
+                Transport = Arc<
+                    dyn Transport<Sender = Box<dyn Sender>, Receiver = Box<dyn Receiver>>,
+                >,
+            >,
+        >,
+    >
+{
+    type Transport = Arc<dyn Transport<Sender = Box<dyn Sender>, Receiver = Box<dyn Receiver>>>;
 
-impl Network for Vec<Arc<dyn Network>> {
     fn is_supported_scheme(&self, addr: &Url) -> bool {
         self.iter().any(|n| n.is_supported_scheme(addr))
     }
 
-    fn connect(
-        &self,
-        remote_addrs: Url,
-    ) -> futures::future::BoxFuture<'_, Result<Arc<dyn Transport>, crate::error::Error>> {
-        async move {
-            for network in self {
-                if network.is_supported_scheme(&remote_addrs) {
-                    return network.connect(remote_addrs).await;
-                }
-            }
+    fn run(&self, on_accept: fn(Self::Transport)) {
+        for network in self {
+            network.run(on_accept);
+        }
+    }
 
-            // todo Fix error
-            Err(crate::error::Error::Simple(
-                crate::error::ErrorKind::SendError,
-            ))
+    fn connect(&self, host_addr: Url) -> Result<Self::Transport, crate::error::Error> {
+        for network in self {
+            if network.is_supported_scheme(&host_addr) {
+                return network.connect(host_addr);
+            }
+        }
+        Err(Error::Custom)
+    }
+}
+
+impl<
+    T: ?Sized
+        + Network<
+            Transport = Arc<dyn Transport<Sender = Box<dyn Sender>, Receiver = Box<dyn Receiver>>>,
+        >,
+> Network for Arc<T>
+{
+    type Transport = Arc<dyn Transport<Sender = Box<dyn Sender>, Receiver = Box<dyn Receiver>>>;
+
+    fn is_supported_scheme(&self, addr: &Url) -> bool {
+        (**self).is_supported_scheme(addr)
+    }
+
+    fn run(&self, on_accept: fn(Self::Transport)) {
+        (**self).run(on_accept);
+    }
+
+    fn connect(&self, host_addr: Url) -> Result<Self::Transport, crate::error::Error> {
+        let transport = (**self).connect(host_addr)?;
+
+        Ok(Arc::new(transport) as Self::Transport)
+    }
+}
+
+impl<T: ?Sized + Transport> Transport for Arc<T> {
+    type Receiver = Box<dyn Receiver>;
+    type Sender = Box<dyn Sender>;
+
+    fn send_datagram(
+        &self,
+        payload: Vec<u8>,
+    ) -> futures::future::BoxFuture<'_, Result<(), crate::error::Error>> {
+        (**self).send_datagram(payload)
+    }
+
+    fn recv_datagram(
+        &self,
+    ) -> futures::future::BoxFuture<'_, Result<Vec<u8>, crate::error::Error>> {
+        (**self).recv_datagram()
+    }
+
+    fn open_uni(
+        &self,
+    ) -> futures::future::BoxFuture<'_, Result<Self::Sender, crate::error::Error>> {
+        async move {
+            let sender = (**self).open_uni().await?;
+            Ok(Box::new(sender) as Box<dyn Sender>)
         }
         .boxed()
     }
 
-    fn run(&self, on_accept: fn(PublicKey, Arc<dyn Transport>)) {
-        for network in self {
-            network.run(on_accept);
+    fn accept_uni(
+        &self,
+    ) -> futures::future::BoxFuture<'_, Result<Self::Receiver, crate::error::Error>> {
+        async move {
+            let receiver = (**self).accept_uni().await?;
+            Ok(Box::new(receiver) as Box<dyn Receiver>)
         }
+        .boxed()
+    }
+
+    fn host_addr(&self) -> futures::future::BoxFuture<'_, Result<Url, crate::error::Error>> {
+        (**self).host_addr()
+    }
+}
+
+impl<T: ?Sized + Sender> Sender for Box<T> {
+    fn send_frame(
+        &mut self,
+        payload: Vec<u8>,
+    ) -> futures::future::BoxFuture<'_, Result<(), crate::error::Error>> {
+        (**self).send_frame(payload)
+    }
+}
+
+impl<T: ?Sized + Receiver> Receiver for Box<T> {
+    fn recv_frame(
+        &mut self,
+    ) -> futures::future::BoxFuture<'_, Result<Vec<u8>, crate::error::Error>> {
+        (**self).recv_frame()
     }
 }

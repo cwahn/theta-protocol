@@ -19,32 +19,37 @@ pub type Ident = Cow<'static, [u8]>;
 
 /// Composable OSI layer 3 implementation
 pub trait Network: Debug + Send + Sync {
+    type Transport: Transport + Clone;
+
     /// Check if supported scheme
     fn is_supported_scheme(&self, addr: &Url) -> bool;
 
-    /// Connect to a remote host address.
-    fn connect(&self, remote_addrs: Url) -> Result<Arc<dyn Transport>, Error>;
-
     /// Accept a connection from a remote address.
     /// Should spawn tasks for each network that supports the scheme.
-    fn run(&self, on_accept: fn(PublicKey, Arc<dyn Transport>));
+    fn run(&self, on_accept: fn(Self::Transport));
 
-    // ! Currently, there is no way to recover if the run method fails.
+    /// Connect to a remote host address.
+    fn connect(&self, host_addr: Url) -> Result<Self::Transport, Error>;
+
+    // Currently, there is no way to recover if the run method fails.
     // todo: Might need to find a way for graceful shutdown
 }
 
 /// OSI layer 4 implementation
 /// Possibly not yet initialized
 pub trait Transport: Debug + Send + Sync {
+    type Sender: 'static + Sender;
+    type Receiver: 'static + Receiver;
+
     fn send_datagram(&self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>>;
 
     fn recv_datagram(&self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
 
-    fn open_uni(&self) -> BoxFuture<'_, Result<Box<dyn Sender>, Error>>;
+    fn open_uni(&self) -> BoxFuture<'_, Result<Self::Sender, Error>>;
 
-    fn accept_uni(&self) -> BoxFuture<'_, Result<Box<dyn Receiver>, Error>>;
+    fn accept_uni(&self) -> BoxFuture<'_, Result<Self::Receiver, Error>>;
 
-    fn host_addr(&self) -> Url;
+    fn host_addr(&self) -> BoxFuture<'_, Result<Url, Error>>;
 }
 
 /// Logical sender
