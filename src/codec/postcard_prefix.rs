@@ -45,7 +45,8 @@ impl<T: for<'de> Deserialize<'de>> Decoder for PostcardPrefixCodec<T> {
         }
 
         // Read the u32 length prefix in little-endian format
-        let length_bytes: [u8; 4] = src[0..4].try_into()
+        let length_bytes: [u8; 4] = src[0..4]
+            .try_into()
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "Invalid length prefix"))?;
         let length = u32::from_le_bytes(length_bytes) as usize;
 

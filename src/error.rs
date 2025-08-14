@@ -22,6 +22,12 @@ pub enum ErrorKind {
     SendError,
     /// An error occurred while receiving a datagram.
     RecvError,
+    /// Invalid address format.
+    InvalidAddress,
+    /// Unsupported URL scheme.
+    UnsupportedScheme,
+    /// Network-related error.
+    NetworkError,
 }
 
 impl core::fmt::Display for Error {
@@ -41,6 +47,9 @@ impl core::fmt::Display for ErrorKind {
         match self {
             ErrorKind::SendError => write!(f, "Send error"),
             ErrorKind::RecvError => write!(f, "Receive error"),
+            ErrorKind::InvalidAddress => write!(f, "Invalid address"),
+            ErrorKind::UnsupportedScheme => write!(f, "Unsupported scheme"),
+            ErrorKind::NetworkError => write!(f, "Network error"),
         }
     }
 }
@@ -51,6 +60,32 @@ impl core::error::Error for Error {
             #[cfg(feature = "alloc")]
             Error::Custom { error, .. } => Some(error.as_ref()),
             _ => None,
+        }
+    }
+}
+
+impl Error {
+    #[cfg(feature = "alloc")]
+    pub fn invalid_address(msg: alloc::string::String) -> Self {
+        Error::Custom {
+            kind: ErrorKind::InvalidAddress,
+            error: msg.into(),
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    pub fn unsupported_scheme(msg: alloc::string::String) -> Self {
+        Error::Custom {
+            kind: ErrorKind::UnsupportedScheme,
+            error: msg.into(),
+        }
+    }
+
+    #[cfg(feature = "alloc")]
+    pub fn network_error(msg: alloc::string::String) -> Self {
+        Error::Custom {
+            kind: ErrorKind::NetworkError,
+            error: msg.into(),
         }
     }
 }

@@ -1,5 +1,6 @@
 use alloc::{sync::Arc, vec::Vec};
 use ed25519_compact::PublicKey;
+use futures::FutureExt;
 use url::Url;
 
 use crate::core::{Network, Transport};
@@ -18,41 +19,23 @@ impl Network for Vec<Arc<dyn Network>> {
         self.iter().any(|n| n.is_supported_scheme(addr))
     }
 
-    fn bind(&self, local_addr: &Url) -> Result<(), crate::error::Error> {
-        for network in self {
-            if network.is_supported_scheme(local_addr) {
-                return network.bind(local_addr);
+    fn connect(
+        &self,
+        remote_addrs: Url,
+    ) -> futures::future::BoxFuture<'_, Result<Arc<dyn Transport>, crate::error::Error>> {
+        async move {
+            for network in self {
+                if network.is_supported_scheme(&remote_addrs) {
+                    return network.connect(remote_addrs).await;
+                }
             }
-        }
-        // todo Fix error
-        Err(crate::error::Error::Simple(
-            crate::error::ErrorKind::SendError,
-        ))
-    }
 
-    fn free(&self, local_addr: &Url) -> Result<(), crate::error::Error> {
-        for network in self {
-            if network.is_supported_scheme(local_addr) {
-                return network.free(local_addr);
-            }
+            // todo Fix error
+            Err(crate::error::Error::Simple(
+                crate::error::ErrorKind::SendError,
+            ))
         }
-        // todo Fix error
-        Err(crate::error::Error::Simple(
-            crate::error::ErrorKind::RecvError,
-        ))
-    }
-
-    fn connect(&self, remote_addrs: &Url) -> Result<Arc<dyn Transport>, crate::error::Error> {
-        for network in self {
-            if network.is_supported_scheme(remote_addrs) {
-                return network.connect(remote_addrs);
-            }
-        }
-
-        // todo Fix error
-        Err(crate::error::Error::Simple(
-            crate::error::ErrorKind::SendError,
-        ))
+        .boxed()
     }
 
     fn run(&self, on_accept: fn(PublicKey, Arc<dyn Transport>)) {
