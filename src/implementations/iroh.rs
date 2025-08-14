@@ -56,7 +56,7 @@ impl Network for IrohNetwork {
                         Err(_) => continue, // Handle connection error
                     };
 
-                    let inner = async move { connecting.await.map_err(|_| Error::Custom) }
+                    let inner = async move { connecting.await.map_err(|_| Error::Tbd) }
                         .boxed()
                         .shared();
 
@@ -70,9 +70,9 @@ impl Network for IrohNetwork {
         let first_segment = host_addr
             .path_segments()
             .and_then(|mut segments| segments.next())
-            .ok_or_else(|| Error::Custom)?;
+            .ok_or_else(|| Error::Tbd)?;
 
-        let public_key: IrohPublicKey = first_segment.parse().map_err(|_| Error::Custom)?;
+        let public_key: IrohPublicKey = first_segment.parse().map_err(|_| Error::Tbd)?;
 
         let node_addr = NodeAddr::new(public_key);
 
@@ -82,7 +82,7 @@ impl Network for IrohNetwork {
             endpoint
                 .connect(node_addr, b"theta")
                 .await
-                .map_err(|_| Error::Custom)
+                .map_err(|_| Error::Tbd)
         }
         .boxed()
         .shared();
@@ -106,7 +106,7 @@ impl Transport for IrohTransport {
             let conn = self.get_conn().await?;
 
             conn.send_datagram(payload.into())
-                .map_err(|_| Error::Custom)
+                .map_err(|_| Error::Tbd)
         }
         .boxed()
     }
@@ -118,7 +118,7 @@ impl Transport for IrohTransport {
             conn.read_datagram()
                 .await
                 .map(|data| data.into())
-                .map_err(|_| Error::Custom)
+                .map_err(|_| Error::Tbd)
         }
         .boxed()
     }
@@ -127,7 +127,7 @@ impl Transport for IrohTransport {
         async move {
             let conn = self.get_conn().await?;
 
-            let send_stream = conn.open_uni().await.map_err(|_| Error::Custom)?;
+            let send_stream = conn.open_uni().await.map_err(|_| Error::Tbd)?;
 
             Ok(IrohSender(FramedWrite::new(
                 send_stream,
@@ -141,7 +141,7 @@ impl Transport for IrohTransport {
         async move {
             let conn = self.get_conn().await?;
 
-            let recv_stream = conn.accept_uni().await.map_err(|_| Error::Custom)?;
+            let recv_stream = conn.accept_uni().await.map_err(|_| Error::Tbd)?;
 
             Ok(IrohReceiver(FramedRead::new(
                 recv_stream,
@@ -194,7 +194,7 @@ impl Future for IrohSendFrame<'_> {
 
         self.inner.poll(cx).map(|result| match result {
             Ok(_) => Ok(()),
-            Err(_) => Err(Error::Custom),
+            Err(_) => Err(Error::Tbd),
         })
     }
 }
@@ -227,8 +227,8 @@ impl Future for IrohRecvFrame<'_> {
 
         self.inner.poll(cx).map(|x| match x {
             Some(Ok(frame)) => Ok(frame),
-            Some(Err(_)) => Err(Error::Custom),
-            None => Err(Error::Custom), // Stream ended
+            Some(Err(_)) => Err(Error::Tbd),
+            None => Err(Error::Tbd), // Stream ended
         })
     }
 }

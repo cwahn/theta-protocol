@@ -3,7 +3,10 @@ use alloc::boxed::Box;
 #[cfg(feature = "std")]
 use std::boxed::Box;
 
-#[derive(Debug, Clone)]
+use thiserror::Error;
+
+#[derive(Debug, Clone, Error)]
 pub enum Error {
-    Custom,
+    #[error("TBD")]
+    Tbd,
 }

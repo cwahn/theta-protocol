@@ -3508,6 +3508,7 @@ dependencies = [
  "rustc-hash",
  "serde",
  "serde_json",
+ "thiserror 2.0.14",
  "tokio",
  "tokio-util",
  "url",

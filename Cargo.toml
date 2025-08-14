@@ -36,6 +36,7 @@ tokio = { version = "1.47.1", features = [
 ], optional = true }
 iroh = { version = "0.91.1", optional = true }
 futures-lite = "2.6.1"
+thiserror = "2.0.14"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
