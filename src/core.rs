@@ -31,7 +31,7 @@ pub trait Network: Debug + Clone + Send + Sync {
     fn run(&self, on_accept: fn(Self::Transport));
 
     /// Connect to a remote host address.
-    fn connect(&self, host_addr: Url) -> Result<Self::Transport, Error>;
+    fn connect(&self, host_addr: &Url) -> Result<Self::Transport, Error>;
 
     // Currently, there is no way to recover if the run method fails.
     // todo: Might need to find a way for graceful shutdown

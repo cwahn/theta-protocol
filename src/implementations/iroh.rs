@@ -66,7 +66,7 @@ impl Network for IrohNetwork {
         });
     }
 
-    fn connect(&self, host_addr: Url) -> Result<Self::Transport, Error> {
+    fn connect(&self, host_addr: &Url) -> Result<Self::Transport, Error> {
         let first_segment = host_addr
             .path_segments()
             .and_then(|mut segments| segments.next())
