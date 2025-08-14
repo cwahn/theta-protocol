@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use tokio_util::codec::{Decoder, Encoder};
 
-/// A minimal codec using postcard serialization with length prefixes.
+/// A minimal codec using postcard serialization with u32 length prefixes.
 ///
-/// Length prefix encoding stores the length of each message at the beginning,
-/// making it efficient for framing but requiring knowledge of the full message size.
+/// Length prefix encoding stores the length of each message as a 4-byte u32 at the beginning,
+/// making it efficient for framing with fixed-size length headers.
 #[derive(Debug, Clone)]
 pub struct PostcardPrefixCodec<T>(PhantomData<T>);
 
@@ -24,11 +24,11 @@ impl<T: Serialize> Encoder<T> for PostcardPrefixCodec<T> {
         let encoded = postcard::to_stdvec(&item)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
-        // Encode length as varint (postcard uses LEB128)
-        let length_bytes = postcard::to_stdvec(&encoded.len())
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+        // Encode length as u32 in little-endian format
+        let length = encoded.len() as u32;
+        let length_bytes = length.to_le_bytes();
 
-        dst.reserve(length_bytes.len() + encoded.len());
+        dst.reserve(4 + encoded.len());
         dst.extend_from_slice(&length_bytes);
         dst.extend_from_slice(&encoded);
         Ok(())
@@ -40,33 +40,23 @@ impl<T: for<'de> Deserialize<'de>> Decoder for PostcardPrefixCodec<T> {
     type Error = io::Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        if src.is_empty() {
+        if src.len() < 4 {
             return Ok(None);
         }
 
-        // Try to decode the length prefix
-        let length_result = postcard::from_bytes::<usize>(&src);
-        let (length, length_size) = match length_result {
-            Ok(length) => {
-                // Calculate how many bytes were consumed for the length
-                let length_bytes = postcard::to_stdvec(&length)
-                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-                (length, length_bytes.len())
-            }
-            Err(_) => {
-                // Not enough bytes to decode length yet
-                return Ok(None);
-            }
-        };
+        // Read the u32 length prefix in little-endian format
+        let length_bytes: [u8; 4] = src[0..4].try_into()
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "Invalid length prefix"))?;
+        let length = u32::from_le_bytes(length_bytes) as usize;
 
         // Check if we have enough bytes for the complete message
-        if src.len() < length_size + length {
+        if src.len() < 4 + length {
             return Ok(None);
         }
 
         // Extract the frame (skip length prefix)
-        let frame = src.split_to(length_size + length);
-        let message_bytes = &frame[length_size..];
+        let frame = src.split_to(4 + length);
+        let message_bytes = &frame[4..];
 
         // Decode the message
         postcard::from_bytes(message_bytes)

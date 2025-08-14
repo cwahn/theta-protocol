@@ -7,7 +7,7 @@ extern crate alloc;
 extern crate std;
 
 #[cfg(feature = "codec")]
-mod codec;
+pub mod codec;
 
 pub mod core;
 pub mod error;
