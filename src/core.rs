@@ -18,7 +18,7 @@ use futures::future::BoxFuture;
 pub type Ident = Cow<'static, [u8]>;
 
 /// Composable OSI layer 3 implementation
-pub trait Network: Debug + Send + Sync {
+pub trait Network: Debug + Clone + Send + Sync {
     type Transport: Transport + Clone;
 
     // todo Define associated future types
@@ -39,7 +39,7 @@ pub trait Network: Debug + Send + Sync {
 
 /// OSI layer 4 implementation
 /// Possibly not yet initialized
-pub trait Transport: Debug + Send + Sync {
+pub trait Transport: Debug + Clone + Send + Sync {
     type Sender: 'static + Sender;
     type Receiver: 'static + Receiver;
 

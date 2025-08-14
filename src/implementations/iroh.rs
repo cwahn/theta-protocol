@@ -14,7 +14,7 @@ use crate::{
 use tokio_util::codec::{Framed, FramedRead, FramedWrite};
 use url::Url;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IrohNetwork {
     endpoint: Endpoint,
 }
