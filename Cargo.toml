@@ -35,6 +35,7 @@ tokio = { version = "1.47.1", features = [
     "sync",
 ], optional = true }
 iroh = { version = "0.91.1", optional = true }
+futures-lite = "2.6.1"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

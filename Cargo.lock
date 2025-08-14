@@ -3500,6 +3500,7 @@ dependencies = [
  "ed25519-compact",
  "fake",
  "futures",
+ "futures-lite",
  "hashbrown",
  "iroh",
  "postcard",
