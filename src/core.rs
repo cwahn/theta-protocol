@@ -19,6 +19,7 @@ pub type Ident = Cow<'static, [u8]>;
 
 /// Composable OSI layer 3 implementation
 pub trait Network: Debug + Clone + Send + Sync {
+    type Error: core::error::Error;
     type Transport: Transport + Clone;
 
     // todo Define associated future types
