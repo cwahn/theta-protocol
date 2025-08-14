@@ -59,22 +59,14 @@ pub trait Transport: Debug + Clone + Send + Sync {
 /// Logical sender
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message with stream_id and send to single internal stream.
 pub trait Sender: Send + Sync {
-    type SendFrame<'a>: Future<Output = Result<(), Error>> + Send + 'a
-    where
-        Self: 'a;
-
     /// - The transport guarantees integrity‐checked, at‐most‐once delivery.
     /// - The transport does not guarantee delivery or ordering
-    fn send_frame(&mut self, payload: Vec<u8>) -> Self::SendFrame<'_>;
+    fn send_frame(&mut self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>>;
 }
 
 /// Logical receiver
 /// It could be actual stream in case of WebSocket like transport, or internally wrap message from single internal stream.
 pub trait Receiver: Send + Sync {
-    type RecvFrame<'a>: Future<Output = Result<Vec<u8>, Error>> + Send + 'a
-    where
-        Self: 'a;
-
     /// Receive the next datagram from the peer.
-    fn recv_frame(&mut self) -> Self::RecvFrame<'_>;
+    fn recv_frame(&mut self) -> BoxFuture<'_, Result<Vec<u8>, Error>>;
 }

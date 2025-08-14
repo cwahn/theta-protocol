@@ -2,7 +2,7 @@ use futures::future::{BoxFuture, Shared};
 use futures::sink::Send;
 use futures::stream::Next;
 use futures::{FutureExt, SinkExt, StreamExt};
-use iroh::endpoint::{self, Connection, RecvStream, SendStream};
+use iroh::endpoint::{Connection, RecvStream, SendStream};
 use iroh::{Endpoint, NodeAddr, PublicKey as IrohPublicKey};
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
     error::Error,
 };
 
-use tokio_util::codec::{Framed, FramedRead, FramedWrite};
+use tokio_util::codec::{FramedRead, FramedWrite};
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -105,8 +105,7 @@ impl Transport for IrohTransport {
         async move {
             let conn = self.get_conn().await?;
 
-            conn.send_datagram(payload.into())
-                .map_err(|_| Error::Tbd)
+            conn.send_datagram(payload.into()).map_err(|_| Error::Tbd)
         }
         .boxed()
     }
@@ -167,68 +166,83 @@ impl Transport for IrohTransport {
 }
 
 impl Sender for IrohSender {
-    type SendFrame<'a>
-        = IrohSendFrame<'a>
-    where
-        Self: 'a;
+    // type SendFrame<'a>
+    //     = IrohSendFrame<'a>
+    // where
+    //     Self: 'a;
 
-    fn send_frame(&mut self, payload: Vec<u8>) -> Self::SendFrame<'_> {
-        IrohSendFrame {
-            inner: self.0.send(payload),
-        }
+    // fn send_frame(&mut self, payload: Vec<u8>) -> Self::SendFrame<'_> {
+    //     IrohSendFrame {
+    //         inner: self.0.send(payload),
+    //     }
+    // }
+
+    fn send_frame(&mut self, payload: Vec<u8>) -> BoxFuture<'_, Result<(), Error>> {
+        async move { Ok(self.0.send(payload).await.map_err(|_| Error::Tbd)?) }.boxed()
     }
 }
 
-pub struct IrohSendFrame<'a> {
-    inner: Send<'a, FramedWrite<SendStream, PostcardPrefixCodec<Vec<u8>>>, Vec<u8>>,
-}
+// pub struct IrohSendFrame<'a> {
+//     inner: Send<'a, FramedWrite<SendStream, PostcardPrefixCodec<Vec<u8>>>, Vec<u8>>,
+// }
 
-impl Future for IrohSendFrame<'_> {
-    type Output = Result<(), Error>;
+// impl Future for IrohSendFrame<'_> {
+//     type Output = Result<(), Error>;
 
-    fn poll(
-        mut self: core::pin::Pin<&mut Self>,
-        cx: &mut core::task::Context<'_>,
-    ) -> core::task::Poll<Self::Output> {
-        use futures_lite::future::FutureExt;
+//     fn poll(
+//         mut self: core::pin::Pin<&mut Self>,
+//         cx: &mut core::task::Context<'_>,
+//     ) -> core::task::Poll<Self::Output> {
+//         use futures_lite::future::FutureExt;
 
-        self.inner.poll(cx).map(|result| match result {
-            Ok(_) => Ok(()),
-            Err(_) => Err(Error::Tbd),
-        })
-    }
-}
+//         self.inner.poll(cx).map(|result| match result {
+//             Ok(_) => Ok(()),
+//             Err(_) => Err(Error::Tbd),
+//         })
+//     }
+// }
 
 impl Receiver for IrohReceiver {
-    type RecvFrame<'a>
-        = IrohRecvFrame<'a>
-    where
-        Self: 'a;
+    // type RecvFrame<'a>
+    //     = IrohRecvFrame<'a>
+    // where
+    //     Self: 'a;
 
-    fn recv_frame(&mut self) -> Self::RecvFrame<'_> {
-        IrohRecvFrame {
-            inner: self.0.next(),
+    // fn recv_frame(&mut self) -> Self::RecvFrame<'_> {
+    //     IrohRecvFrame {
+    //         inner: self.0.next(),
+    //     }
+    // }
+
+    fn recv_frame(&mut self) -> BoxFuture<'_, Result<Vec<u8>, Error>> {
+        async move {
+            match self.0.next().await {
+                Some(Ok(frame)) => Ok(frame),
+                Some(Err(_)) => Err(Error::Tbd), // Handle error appropriately
+                None => Err(Error::Tbd),         // Stream ended
+            }
         }
+        .boxed()
     }
 }
 
-pub struct IrohRecvFrame<'a> {
-    inner: Next<'a, FramedRead<RecvStream, PostcardPrefixCodec<Vec<u8>>>>,
-}
+// pub struct IrohRecvFrame<'a> {
+//     inner: Next<'a, FramedRead<RecvStream, PostcardPrefixCodec<Vec<u8>>>>,
+// }
 
-impl Future for IrohRecvFrame<'_> {
-    type Output = Result<Vec<u8>, Error>;
+// impl Future for IrohRecvFrame<'_> {
+//     type Output = Result<Vec<u8>, Error>;
 
-    fn poll(
-        mut self: core::pin::Pin<&mut Self>,
-        cx: &mut core::task::Context<'_>,
-    ) -> core::task::Poll<Self::Output> {
-        use futures_lite::future::FutureExt;
+//     fn poll(
+//         mut self: core::pin::Pin<&mut Self>,
+//         cx: &mut core::task::Context<'_>,
+//     ) -> core::task::Poll<Self::Output> {
+//         use futures_lite::future::FutureExt;
 
-        self.inner.poll(cx).map(|x| match x {
-            Some(Ok(frame)) => Ok(frame),
-            Some(Err(_)) => Err(Error::Tbd),
-            None => Err(Error::Tbd), // Stream ended
-        })
-    }
-}
+//         self.inner.poll(cx).map(|x| match x {
+//             Some(Ok(frame)) => Ok(frame),
+//             Some(Err(_)) => Err(Error::Tbd),
+//             None => Err(Error::Tbd), // Stream ended
+//         })
+//     }
+// }
